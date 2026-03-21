@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TOEIC 単語帳</title>
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TOEIC単語帳">
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --sur2: #1c2333;
+      --border: #2d3748;
+      --accent: #60a5fa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --text: #f0f4ff;
+      --muted: #6b7280;
+      --nav-h: 60px;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --r: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+      font-size: 15px;
+      overscroll-behavior: none;
+      max-width: 500px;
+      margin: 0 auto;
+      position: relative
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding: 16px 16px calc(var(--nav-h) + var(--safe-b) + 20px);
+      animation: fadeUp .2s ease both
+    }
+
+    .screen.active {
+      display: flex
+    }
+
+    #screen-quiz {
+      padding: 0;
+      min-height: 100dvh;
+      height: 100dvh;
+      overflow: hidden
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .bnav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 500px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      z-index: 100
+    }
+
+    .bnav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 6px 2px;
+      transition: color .15s
+    }
+
+    .bnav-btn .ni {
+      font-size: 19px;
+      line-height: 1
+    }
+
+    .bnav-btn.active {
+      color: var(--accent)
+    }
+
+    .s-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-top: max(8px, env(safe-area-inset-top))
+    }
+
+    .s-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -.3px
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      margin-bottom: 12px
+    }
+
+    .card-flat {
+      background: var(--sur2);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px
+    }
+
+    .sec-label {
+      font-size: .68rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      font-size: .93rem;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .13s;
+      -webkit-appearance: none
+    }
+
+    .btn:active {
+      transform: scale(.96);
+      opacity: .85
+    }
+
+    .btn-full {
+      width: 100%
+    }
+
+    .btn-blue {
+      background: var(--accent);
+      color: #0a0e1a
+    }
+
+    .btn-yellow {
+      background: var(--yellow);
+      color: #0a0e1a
+    }
+
+    .btn-ghost {
+      background: var(--sur2);
+      color: var(--text);
+      border: 1px solid var(--border)
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff
+    }
+
+    .btn-sm {
+      padding: 7px 13px;
+      font-size: .8rem;
+      border-radius: 8px
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 99px;
+      letter-spacing: .5px;
+      white-space: nowrap
+    }
+
+    .badge-完璧 {
+      background: rgba(96, 165, 250, .18);
+      color: var(--accent)
+    }
+
+    .badge-不安 {
+      background: rgba(251, 191, 36, .18);
+      color: var(--yellow)
+    }
+
+    .badge-未知 {
+      background: rgba(248, 113, 113, .18);
+      color: var(--red)
+    }
+
+    .badge-untested {
+      background: var(--sur2);
+      color: var(--muted)
+    }
+
+    .c-accent {
+      color: var(--accent)
+    }
+
+    .c-yellow {
+      color: var(--yellow)
+    }
+
+    .c-red {
+      color: var(--red)
+    }
+
+    .c-muted {
+      color: var(--muted)
+    }
+
+    .c-green {
+      color: var(--green)
+    }
+
+    .f-label {
+      display: block;
+      font-size: .78rem;
+      color: var(--muted);
+      margin-bottom: 6px
+    }
+
+    .f-input,
+    .f-select,
+    .f-textarea {
+      width: 100%;
+      background: var(--sur2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: .9rem;
+      padding: 10px 12px;
+      transition: border-color .15s
+    }
+
+    .f-input:focus,
+    .f-select:focus,
+    .f-textarea:focus {
+      outline: none;
+      border-color: var(--accent)
+    }
+
+    .f-mono {
+      font-family: 'Courier New', monospace;
+      font-size: .88rem
+    }
+
+    .f-textarea {
+      height: 150px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+      font-size: .85rem
+    }
+
+    .f-group {
+      margin-bottom: 14px
+    }
+
+    .hint-box {
+      background: var(--sur2);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px
+    }
+
+    .hint-box code {
+      color: var(--accent);
+      font-family: monospace
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+      margin-bottom: 14px
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none
+    }
+
+    .ftab {
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--sur2);
+      color: var(--muted);
+      font-size: .8rem;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .13s
+    }
+
+    .ftab.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(96, 165, 250, .1)
+    }
+
+    /* HOME */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 6px;
+      text-align: center
+    }
+
+    .stat-num {
+      font-family: 'Courier New', monospace;
+      font-size: 1.55rem;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .stat-lbl {
+      font-size: .62rem;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    .prog-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .72rem;
+      color: var(--muted);
+      margin-bottom: 5px
+    }
+
+    .prog-track {
+      height: 8px;
+      background: var(--sur2);
+      border-radius: 99px;
+      overflow: hidden
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .5s ease
+    }
+
+    .prog-fill-p {
+      background: linear-gradient(90deg, var(--accent), var(--green))
+    }
+
+    .prog-fill-b {
+      background: var(--accent)
+    }
+
+    .resume-card {
+      background: rgba(96, 165, 250, .08);
+      border: 1px solid rgba(96, 165, 250, .25);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: background .13s
+    }
+
+    .resume-card:active {
+      background: rgba(96, 165, 250, .15)
+    }
+
+    /* FOLDER */
+    .folder-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer
+    }
+
+    .folder-row:last-child {
+      border-bottom: none
+    }
+
+    .folder-row:active {
+      opacity: .7
+    }
+
+    .folder-name {
+      font-weight: 700;
+      font-size: .92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .folder-meta {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .folder-sel-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--sur2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+      margin-bottom: 8px
+    }
+
+    .folder-sel-card.sel {
+      border-color: var(--accent);
+      background: rgba(96, 165, 250, .1)
+    }
+
+    .folder-sel-card:active {
+      opacity: .75
+    }
+
+    .fd-stat-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .fd-stat {
+      flex: 1;
+      background: var(--sur2);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center
+    }
+
+    .fd-stat-n {
+      font-family: 'Courier New', monospace;
+      font-size: 1.3rem;
+      font-weight: 700
+    }
+
+    .fd-stat-l {
+      font-size: .65rem;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    /* TEST */
+    .count-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 10px
+    }
+
+    .cnt-btn {
+      padding: 16px 4px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--sur2);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all .13s
+    }
+
+    .cnt-btn:active {
+      transform: scale(.95)
+    }
+
+    .cnt-btn.sel {
+      border-color: var(--accent);
+      background: rgba(96, 165, 250, .12);
+      color: var(--accent)
+    }
+
+    /* QUIZ */
+    .quiz-wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden
+    }
+
+    .quiz-hdr {
+      padding: 10px 16px;
+      padding-top: max(10px, env(safe-area-inset-top));
+      flex-shrink: 0
+    }
+
+    .q-prog-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px
+    }
+
+    .q-prog-track {
+      flex: 1;
+      height: 4px;
+      background: var(--sur2);
+      border-radius: 99px;
+      overflow: hidden
+    }
+
+    .q-prog-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width .4s ease
+    }
+
+    .q-prog-txt {
+      font-family: 'Courier New', monospace;
+      font-size: .75rem;
+      color: var(--muted);
+      white-space: nowrap
+    }
+
+    .q-score-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end
+    }
+
+    .q-chip {
+      font-family: 'Courier New', monospace;
+      font-size: .72rem;
+      padding: 3px 10px;
+      border-radius: 99px
+    }
+
+    .q-chip-c {
+      background: rgba(52, 211, 153, .15);
+      color: var(--green)
+    }
+
+    .q-chip-w {
+      background: rgba(248, 113, 113, .15);
+      color: var(--red)
+    }
+
+    .q-chip-m {
+      background: var(--sur2);
+      color: var(--muted)
+    }
+
+    .quiz-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .q-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px 16px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .q-type-lbl {
+      font-size: .68rem;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px
+    }
+
+    .q-word {
+      font-family: 'Courier New', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.2;
+      word-break: break-word
+    }
+
+    .q-word-jp {
+      font-size: 1.3rem;
+      font-weight: 700
+    }
+
+    .q-folder-badge {
+      font-size: .68rem;
+      color: var(--muted);
+      margin-top: 6px
+    }
+
+    #speak-btn {
+      background: var(--sur2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all .13s;
+      color: var(--text)
+    }
+
+    #speak-btn:active {
+      transform: scale(.93)
+    }
+
+    #speak-btn.speaking {
+      border-color: var(--accent);
+      background: rgba(96, 165, 250, .12)
+    }
+
+    .q-dots {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin-top: 12px
+    }
+
+    .q-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .2s
+    }
+
+    .q-dot-ok {
+      background: var(--green)
+    }
+
+    .q-dot-bad {
+      background: var(--red)
+    }
+
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      flex-shrink: 0
+    }
+
+    .ch-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: .88rem;
+      padding: 16px 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .12s;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3
+    }
+
+    .ch-btn:active:not(:disabled) {
+      transform: scale(.96)
+    }
+
+    .ch-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(96, 165, 250, .06)
+    }
+
+    .ch-btn.ok {
+      border-color: var(--green) !important;
+      background: rgba(52, 211, 153, .1) !important;
+      color: var(--green) !important
+    }
+
+    .ch-btn.ng {
+      border-color: var(--red) !important;
+      background: rgba(248, 113, 113, .1) !important;
+      color: var(--red) !important
+    }
+
+    .ch-btn:disabled {
+      cursor: default
+    }
+
+    .fb-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: .83rem;
+      line-height: 1.7;
+      min-height: 52px;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: border-color .2s
+    }
+
+    .fb-box.ok {
+      border-color: var(--green)
+    }
+
+    .fb-box.ng {
+      border-color: var(--red)
+    }
+
+    .quiz-ftr {
+      padding: 10px 16px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      flex-shrink: 0
+    }
+
+    /* RESULT */
+    .res-score {
+      font-family: 'Courier New', monospace;
+      font-size: 3.5rem;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1
+    }
+
+    .res-score small {
+      font-size: 1.3rem;
+      color: var(--muted)
+    }
+
+    .res-bar {
+      height: 8px;
+      border-radius: 99px;
+      overflow: hidden;
+      display: flex;
+      margin: 14px 0
+    }
+
+    .rb-p {
+      background: var(--accent)
+    }
+
+    .rb-u {
+      background: var(--yellow)
+    }
+
+    .rb-k {
+      background: var(--red)
+    }
+
+    .tag-sum-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .tag-sum-box {
+      background: var(--sur2);
+      border-radius: 10px;
+      padding: 14px 6px;
+      text-align: center
+    }
+
+    .tag-sum-n {
+      font-family: 'Courier New', monospace;
+      font-size: 1.6rem;
+      font-weight: 700
+    }
+
+    .tag-sum-l {
+      font-size: .68rem;
+      color: var(--muted);
+      margin-top: 3px
+    }
+
+    .action-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    /* WORD LIST */
+    .word-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 8px
+    }
+
+    .word-row:last-child {
+      border-bottom: none
+    }
+
+    .word-en {
+      font-family: 'Courier New', monospace;
+      font-size: .9rem;
+      min-width: 0
+    }
+
+    .word-ja {
+      font-size: .82rem;
+      color: var(--muted);
+      flex: 1;
+      text-align: right;
+      margin-right: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted)
+    }
+
+    .empty-state .ei {
+      font-size: 2.8rem;
+      margin-bottom: 12px
+    }
+
+    .empty-state p {
+      font-size: .88rem;
+      line-height: 1.7
+    }
+
+    /* OVERLAY */
+    .overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 199
+    }
+
+    .overlay-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 500px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 200;
+      animation: slideUp .2s ease;
+      max-height: 85vh;
+      overflow-y: auto
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100%)
+      }
+
+      to {
+        transform: translateX(-50%) translateY(0)
+      }
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      margin: 0 auto 16px
+    }
+
+    .sheet-title {
+      font-weight: 800;
+      font-size: 1rem;
+      margin-bottom: 14px
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 9px 20px;
+      font-size: .82rem;
+      color: var(--text);
+      z-index: 300;
+      white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+      animation: fadeUp .2s ease;
+      pointer-events: none
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HOME -->
+  <section id="screen-home" class="screen active">
+    <div class="s-head">
+      <span class="s-title">TOEIC 単語帳</span>
+      <span id="home-sub" style="font-size:.72rem;color:var(--muted)"></span>
+    </div>
+    <div id="resume-area"></div>
+    <div class="stats-grid" id="home-stats"></div>
+    <div class="card" id="home-prog"></div>
+    <div class="sec-label" style="margin-top:4px">クイックスタート</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-blue btn-full" onclick="go('test-setup')">🎯 テストを始める</button>
+      <button class="btn btn-yellow btn-full" onclick="openReviewSheet()">🔄 復習する</button>
+    </div>
+  </section>
+
+  <!-- FOLDERS -->
+  <section id="screen-folders" class="screen">
+    <div class="s-head">
+      <span class="s-title">フォルダ</span>
+      <button class="btn btn-blue btn-sm" onclick="openNewFolderSheet()">＋ 新規</button>
+    </div>
+    <div id="folder-list-el"></div>
+  </section>
+
+  <!-- FOLDER DETAIL -->
+  <section id="screen-folder-detail" class="screen">
+    <div class="s-head">
+      <button class="btn btn-ghost btn-sm" onclick="go('folders')">← 戻る</button>
+      <span class="s-title" id="fd-title"></span>
+      <button class="btn btn-ghost btn-sm" onclick="openFolderMenu()">…</button>
+    </div>
+    <div class="fd-stat-row" id="fd-stats"></div>
+    <div class="filter-tabs" id="fd-tabs">
+      <button class="ftab active" onclick="fdFilter('all')">すべて</button>
+      <button class="ftab" onclick="fdFilter('none')">未テスト</button>
+      <button class="ftab" onclick="fdFilter('完璧')">完璧</button>
+      <button class="ftab" onclick="fdFilter('不安')">不安</button>
+      <button class="ftab" onclick="fdFilter('未知')">未知</button>
+    </div>
+    <div class="card" id="fd-word-list"></div>
+  </section>
+
+  <!-- TEST SETUP -->
+  <section id="screen-test-setup" class="screen">
+    <div class="s-head">
+      <button class="btn btn-ghost btn-sm" onclick="go('home')">← 戻る</button>
+      <span class="s-title">テスト設定</span>
+      <span></span>
+    </div>
+    <div class="card">
+      <div class="sec-label">フォルダを選択（必須）</div>
+      <div id="test-folder-list"></div>
+    </div>
+    <div class="card">
+      <div class="sec-label">出題方向</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="cnt-btn sel" id="dir-en" onclick="selDir('en2ja')">英 → 日</button>
+        <button class="cnt-btn" id="dir-ja" onclick="selDir('ja2en')">日 → 英</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-label">出題数（未テスト単語から）</div>
+      <div class="count-grid">
+        <button class="cnt-btn sel" onclick="selCount(10)">10</button>
+        <button class="cnt-btn" onclick="selCount(20)">20</button>
+        <button class="cnt-btn" onclick="selCount(50)">50</button>
+        <button class="cnt-btn" onclick="selCount(9999)">全て</button>
+      </div>
+      <div id="untagged-info" style="font-size:.8rem;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <button class="btn btn-blue btn-full" id="start-test-btn" onclick="startTest()" disabled
+      style="opacity:.45">フォルダを選択してください</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-wrap">
+      <div class="quiz-hdr">
+        <div class="q-prog-row">
+          <button onclick="exitQuiz()"
+            style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:2px 6px 2px 0;flex-shrink:0">✕</button>
+          <div class="q-prog-track">
+            <div class="q-prog-fill" id="q-pfill" style="width:0%"></div>
+          </div>
+          <span class="q-prog-txt" id="q-ptxt">0/0</span>
+        </div>
+        <div class="q-score-row">
+          <span class="q-chip q-chip-c" id="q-sc">✓ 0</span>
+          <span class="q-chip q-chip-w" id="q-sw">✗ 0</span>
+          <span class="q-chip q-chip-m" id="q-sm"></span>
+        </div>
+      </div>
+      <div class="quiz-body">
+        <div class="q-card">
+          <div class="q-type-lbl" id="q-lbl">英語 → 日本語</div>
+          <div id="q-word" class="q-word">—</div>
+          <button id="speak-btn" onclick="speakCurrent()" style="display:none"><span id="speak-icon">🔊</span></button>
+          <div class="q-dots" id="q-dots"></div>
+          <div class="q-folder-badge" id="q-folder-badge"></div>
+        </div>
+        <div class="choices-grid" id="choices"></div>
+        <div class="fb-box" id="fb">選択肢を選んでください</div>
+      </div>
+      <div class="quiz-ftr">
+        <button class="btn btn-blue btn-full" id="next-btn" onclick="nextWord()" style="display:none">次へ →</button>
+        <div id="next-ph" style="height:48px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="screen-result" class="screen">
+    <div class="s-head"><span class="s-title">結果</span></div>
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div class="res-score" id="res-score">—</div>
+      <div id="res-msg" style="font-size:.83rem;color:var(--muted);margin-top:8px"></div>
+      <div class="res-bar" id="res-bar"></div>
+    </div>
+    <div class="tag-sum-grid">
+      <div class="tag-sum-box">
+        <div class="tag-sum-n c-accent" id="rs-p">0</div>
+        <div class="tag-sum-l">完璧</div>
+      </div>
+      <div class="tag-sum-box">
+        <div class="tag-sum-n c-yellow" id="rs-u">0</div>
+        <div class="tag-sum-l">不安</div>
+      </div>
+      <div class="tag-sum-box">
+        <div class="tag-sum-n c-red" id="rs-k">0</div>
+        <div class="tag-sum-l">未知</div>
+      </div>
+    </div>
+    <div class="action-col" id="res-actions"></div>
+  </section>
+
+  <!-- ADD -->
+  <section id="screen-add" class="screen">
+    <div class="s-head"><span class="s-title">単語を追加</span></div>
+    <div class="filter-tabs">
+      <button class="ftab active" id="tab-bulk" onclick="switchAddTab('bulk')">まとめて追加</button>
+      <button class="ftab" id="tab-single" onclick="switchAddTab('single')">1語ずつ</button>
+    </div>
+    <div id="add-bulk-area">
+      <div class="hint-box">
+        <strong>フォーマット:</strong> <code>英単語,日本語</code>（1行1単語）<br>ExcelやGoogleスプレッドシートからコピペOK（タブ区切り対応）
+      </div>
+      <div class="f-group">
+        <label class="f-label">追加先フォルダ</label>
+        <select class="f-select" id="bulk-fid"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">単語リスト</label>
+        <textarea class="f-textarea" id="bulk-txt"
+          placeholder="abandon,捨てる&#10;accelerate,加速する&#10;acquire,取得する"></textarea>
+      </div>
+      <div id="bulk-err" style="color:var(--red);font-size:.78rem;margin-bottom:8px;display:none"></div>
+      <button class="btn btn-blue btn-full" onclick="addBulk()">追加する</button>
+    </div>
+    <div id="add-single-area" style="display:none">
+      <div class="f-group">
+        <label class="f-label">追加先フォルダ</label>
+        <select class="f-select" id="single-fid"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">英単語</label>
+        <input class="f-input f-mono" id="single-en" placeholder="accomplish" type="text" autocapitalize="none"
+          autocorrect="off">
+      </div>
+      <div class="f-group">
+        <label class="f-label">日本語の意味</label>
+        <input class="f-input" id="single-ja" placeholder="達成する" type="text">
+      </div>
+      <div id="single-err" style="color:var(--red);font-size:.78rem;margin-bottom:8px;display:none"></div>
+      <button class="btn btn-blue btn-full" onclick="addSingle()">追加する</button>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="sec-label" style="margin-bottom:10px">データ管理</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 CSVエクスポート</button>
+        <button class="btn btn-danger btn-sm" onclick="resetAllTags()">🔄 全タグリセット</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAV -->
+  <nav class="bnav" id="bnav">
+    <button class="bnav-btn active" id="n-home" onclick="go('home')"> <span
+        class="ni">🏠</span><span>ホーム</span></button>
+    <button class="bnav-btn" id="n-folders" onclick="go('folders')"> <span class="ni">📖</span><span>単語帳</span></button>
+    <button class="bnav-btn" id="n-add" onclick="go('add')"> <span class="ni">➕</span><span>追加</span></button>
+    <button class="bnav-btn" id="n-test-setup" onclick="go('test-setup')"> <span
+        class="ni">🎯</span><span>テスト</span></button>
+    <button class="bnav-btn" id="n-review" onclick="openReviewSheet()"><span
+        class="ni">🔄</span><span>復習</span></button>
+  </nav>
+
+  <script>
+    'use strict';
+    const DEFAULT_FID = 'folder-default';
+    const DB_KEY = 'toeic_db_v3';
+    const SES_KEY = 'toeic_ses_v3';
+
+    const SEED = [
+      ['abandon', '放棄する'], ['accelerate', '加速する'], ['accommodate', '収容する'],
+      ['accomplish', '達成する'], ['accurate', '正確な'], ['adapt', '適応する'],
+      ['adequate', '十分な'], ['adjacent', '隣接した'], ['allocate', '割り当てる'],
+      ['anticipate', '予測する'], ['appreciate', '感謝する・理解する'], ['approve', '承認する'],
+      ['assess', '評価する'], ['assume', '想定する'], ['authorize', '許可する'],
+      ['beneficial', '有益な'], ['capable', '有能な'], ['clarify', '明確にする'],
+      ['collaborate', '協力する'], ['compensate', '補償する'], ['comply', '従う'],
+      ['confirm', '確認する'], ['consolidate', '統合する'], ['contribute', '貢献する'],
+      ['coordinate', '調整する'], ['decline', '断る・減少する'], ['delegate', '委任する'],
+      ['demonstrate', '証明する'], ['distribute', '配布する'], ['efficient', '効率的な'],
+      ['eliminate', '排除する'], ['enhance', '向上させる'], ['establish', '設立する'],
+      ['evaluate', '評価する'], ['expand', '拡大する'], ['facilitate', '促進する'],
+      ['flexible', '柔軟な'], ['generate', '生み出す'], ['implement', '実施する'],
+      ['indicate', '示す'], ['integrate', '統合する'], ['maintain', '維持する'],
+      ['minimize', '最小化する'], ['modify', '修正する'], ['negotiate', '交渉する'],
+      ['obtain', '取得する'], ['optimize', '最適化する'], ['participate', '参加する'],
+      ['promote', '促進する'], ['qualify', '資格を得る'], ['reduce', '削減する'],
+      ['regulate', '規制する'], ['relocate', '移転する'], ['resolve', '解決する'],
+      ['revise', '修正する'], ['submit', '提出する'], ['sufficient', '十分な'],
+      ['terminate', '終了させる'], ['verify', '確認する'], ['analyze', '分析する'],
+      ['communicate', '伝達する'], ['deliver', '届ける'], ['develop', '開発する'],
+      ['improve', '改善する'], ['monitor', '監視する'], ['notify', '通知する'],
+      ['propose', '提案する'], ['provide', '提供する'], ['require', '必要とする'],
+      ['transfer', '移転する'], ['update', '更新する'], ['achieve', '達成する'],
+      ['apply', '応募する・適用する'], ['complete', '完了する'], ['consider', '検討する'],
+      ['increase', '増加する'], ['observe', '観察する'], ['record', '記録する'],
+      ['respond', '対応する'], ['retain', '保持する'], ['review', '見直す'],
+      ['select', '選択する'], ['specify', '明示する'], ['support', '支援する'],
+    ];
+
+    let db;
+
+    function loadDB() {
+      try { const r = localStorage.getItem(DB_KEY); if (r) { db = JSON.parse(r); migrate(); return; } } catch (e) { }
+      db = {
+        folders: [{ id: DEFAULT_FID, name: 'デフォルト', createdAt: Date.now() }],
+        words: SEED.map(([en, ja], i) => ({ id: 'w' + (Date.now() + i), en, ja, tag: null, folderId: DEFAULT_FID, addedAt: Date.now() + i }))
+      };
+      saveDB();
+    }
+    function migrate() {
+      if (!db.folders) db.folders = [{ id: DEFAULT_FID, name: 'デフォルト', createdAt: Date.now() }];
+      db.words.forEach(w => { if (!w.folderId) w.folderId = DEFAULT_FID; });
+      saveDB();
+    }
+    function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+    function fById(id) { return db.folders.find(f => f.id === id); }
+    function wInFolder(fid) { return db.words.filter(w => w.folderId === fid); }
+
+    // ── NAVIGATION ──────────────────────────────────────
+    const NAV_MAP = { home: 'n-home', folders: 'n-folders', 'folder-detail': 'n-folders', add: 'n-add', 'test-setup': 'n-test-setup' };
+    function go(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name)?.classList.add('active');
+      document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+      if (NAV_MAP[name]) document.getElementById(NAV_MAP[name])?.classList.add('active');
+      document.getElementById('bnav').style.display = (name === 'quiz' || name === 'result') ? 'none' : 'flex';
+      if (name === 'home') renderHome();
+      if (name === 'folders') renderFolders();
+      if (name === 'test-setup') renderTestSetup();
+      if (name === 'add') renderAdd();
+      window.scrollTo(0, 0);
+    }
+
+    // ── HOME ────────────────────────────────────────────
+    function renderHome() {
+      const ws = db.words, n = ws.length;
+      const p = ws.filter(w => w.tag === '完璧').length, u = ws.filter(w => w.tag === '不安').length,
+        k = ws.filter(w => w.tag === '未知').length, none = ws.filter(w => !w.tag).length;
+      document.getElementById('home-sub').textContent = `全${n}語 / ${db.folders.length}フォルダ`;
+      document.getElementById('home-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${n}</div><div class="stat-lbl">総単語数</div></div>
+    <div class="stat-box"><div class="stat-num c-accent">${p}</div><div class="stat-lbl">完璧</div></div>
+    <div class="stat-box"><div class="stat-num c-yellow">${u}</div><div class="stat-lbl">不安</div></div>
+    <div class="stat-box"><div class="stat-num c-red">${k}</div><div class="stat-lbl">未知</div></div>`;
+      const pp = n > 0 ? Math.round(p / n * 100) : 0, tp = n > 0 ? Math.round((p + u + k) / n * 100) : 0;
+      document.getElementById('home-prog').innerHTML = `
+    <div class="sec-label">学習進捗</div>
+    <div class="prog-row"><span>完璧 ${p}語</span><span>${pp}%</span></div>
+    <div class="prog-track"><div class="prog-fill prog-fill-p" style="width:${pp}%"></div></div>
+    <div style="margin-top:8px" class="prog-row"><span>テスト済 ${p + u + k}語</span><span>${tp}%</span></div>
+    <div class="prog-track"><div class="prog-fill prog-fill-b" style="width:${tp}%"></div></div>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:8px">未テスト: ${none}語</div>`;
+      const ra = document.getElementById('resume-area'), raw = localStorage.getItem(SES_KEY);
+      if (raw) {
+        try {
+          const s = JSON.parse(raw), ml = { test: 'テスト', review: '復習', perfect: '完璧確認' };
+          const fn = s.folderId ? fById(s.folderId)?.name || '' : '全フォルダ';
+          ra.innerHTML = `<div class="resume-card" onclick="resumeSession()">
+        <span style="font-size:1.5rem">▶️</span>
+        <div style="flex:1"><div style="font-weight:700;font-size:.9rem">テストを再開する</div>
+        <div style="font-size:.72rem;color:var(--muted)">${ml[s.mode] || s.mode} — ${fn} — 残り${s.queue.length}問</div></div>
+        <span class="c-accent">→</span></div>`;
+        } catch (e) { ra.innerHTML = ''; }
+      } else ra.innerHTML = '';
+    }
+    function resumeSession() {
+      const r = localStorage.getItem(SES_KEY); if (!r) return;
+      try { session = JSON.parse(r); go('quiz'); renderQuestion(); } catch (e) { localStorage.removeItem(SES_KEY); }
+    }
+
+    // ── FOLDERS ─────────────────────────────────────────
+    const FICONS = ['📘', '📗', '📙', '📕', '📒', '📓', '📔', '📃'];
+    function renderFolders() {
+      const el = document.getElementById('folder-list-el');
+      if (!db.folders.length) {
+        el.innerHTML = `<div class="empty-state"><div class="ei">📁</div><p>フォルダがありません<br>右上の「＋ 新規」で作成しましょう</p></div>`; return;
+      }
+      el.innerHTML = '<div class="card" style="padding:0 16px">' + db.folders.map((f, i) => {
+        const ws = wInFolder(f.id), p = ws.filter(w => w.tag === '完璧').length, none = ws.filter(w => !w.tag).length;
+        return `<div class="folder-row" onclick="openFD('${f.id}')">
+      <span style="font-size:1.4rem;flex-shrink:0">${FICONS[i % FICONS.length]}</span>
+      <div style="flex:1;min-width:0"><div class="folder-name">${esc(f.name)}</div>
+      <div class="folder-meta">${ws.length}語 • 完璧 ${p} • 未テスト ${none}</div></div>
+      <span style="color:var(--muted)">›</span></div>`;
+      }).join('') + '</div>';
+    }
+    function openNewFolderSheet() {
+      inputSheet('新規フォルダ', 'フォルダ名（例：TOEIC 600点）', '', name => {
+        if (!name.trim()) return;
+        db.folders.push({ id: 'f' + Date.now(), name: name.trim(), createdAt: Date.now() });
+        saveDB(); renderFolders(); renderAdd(); toast('📁 フォルダ「' + name.trim() + '」を作成しました');
+      });
+    }
+
+    // ── FOLDER DETAIL ────────────────────────────────────
+    let curFID = null, fdFilt = 'all';
+    function openFD(fid) { curFID = fid; fdFilt = 'all'; renderFD(); go('folder-detail'); }
+    function renderFD() {
+      const f = fById(curFID); if (!f) { go('folders'); return; }
+      const ws = wInFolder(curFID);
+      const p = ws.filter(w => w.tag === '完璧').length, u = ws.filter(w => w.tag === '不安').length,
+        k = ws.filter(w => w.tag === '未知').length, none = ws.filter(w => !w.tag).length;
+      document.getElementById('fd-title').textContent = f.name;
+      document.getElementById('fd-stats').innerHTML = `
+    <div class="fd-stat"><div class="fd-stat-n">${ws.length}</div><div class="fd-stat-l">総数</div></div>
+    <div class="fd-stat"><div class="fd-stat-n c-accent">${p}</div><div class="fd-stat-l">完璧</div></div>
+    <div class="fd-stat"><div class="fd-stat-n c-yellow">${u}</div><div class="fd-stat-l">不安</div></div>
+    <div class="fd-stat"><div class="fd-stat-n c-red">${k}</div><div class="fd-stat-l">未知</div></div>
+    <div class="fd-stat"><div class="fd-stat-n c-muted">${none}</div><div class="fd-stat-l">未テスト</div></div>`;
+      document.querySelectorAll('#fd-tabs .ftab').forEach((t, i) => t.classList.toggle('active', ['all', 'none', '完璧', '不安', '未知'][i] === fdFilt));
+      const fil = fdFilt === 'all' ? ws : fdFilt === 'none' ? ws.filter(w => !w.tag) : ws.filter(w => w.tag === fdFilt);
+      const el = document.getElementById('fd-word-list');
+      if (!fil.length) { el.innerHTML = `<div class="empty-state"><div class="ei">📭</div><p>該当する単語がありません</p></div>`; return; }
+      el.innerHTML = fil.map(w => `<div class="word-row">
+    <span class="word-en">${esc(w.en)}</span><span class="word-ja">${esc(w.ja)}</span>
+    <span class="badge badge-${w.tag || 'untested'}">${w.tag || '未テスト'}</span></div>`).join('');
+    }
+    function fdFilter(f) { fdFilt = f; renderFD(); }
+    function openFolderMenu() {
+      const f = fById(curFID); if (!f) return;
+      const isD = f.id === DEFAULT_FID;
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">📁 ${esc(f.name)}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-ghost btn-full" id="fm-r">✏️ フォルダ名を変更</button>
+      ${isD ? '' : '<button class="btn btn-danger btn-full" id="fm-d">🗑 フォルダを削除</button>'}
+      <button class="btn btn-ghost btn-full" id="fm-c">キャンセル</button></div>`;
+      const close = () => { bd.remove(); sh.remove(); };
+      bd.onclick = close;
+      sh.querySelector('#fm-c').onclick = close;
+      sh.querySelector('#fm-r').onclick = () => {
+        close(); inputSheet('フォルダ名を変更', '新しい名前', f.name, name => {
+          if (!name.trim()) return; f.name = name.trim(); saveDB(); renderFD(); toast('✅ フォルダ名を変更しました');
+        });
+      };
+      if (!isD) sh.querySelector('#fm-d').onclick = () => {
+        close();
+        if (!confirm(`「${f.name}」を削除します。\n中の単語はデフォルトフォルダに移動されます。`)) return;
+        db.words.forEach(w => { if (w.folderId === f.id) w.folderId = DEFAULT_FID; });
+        db.folders = db.folders.filter(x => x.id !== f.id); saveDB(); toast('🗑 フォルダを削除しました'); go('folders');
+      };
+      document.body.append(bd, sh);
+    }
+
+    // ── TEST SETUP ───────────────────────────────────────
+    let selCount_v = 10, selDir_v = 'en2ja', selFID = null;
+    function renderTestSetup() {
+      const el = document.getElementById('test-folder-list');
+      el.innerHTML = db.folders.map(f => {
+        const cnt = wInFolder(f.id).filter(w => !w.tag).length, sel = selFID === f.id;
+        return `<div class="folder-sel-card ${sel ? 'sel' : ''}" onclick="selFolder('${f.id}')">
+      <span style="font-size:1.3rem">📁</span>
+      <div style="flex:1"><div style="font-weight:700;font-size:.9rem">${esc(f.name)}</div>
+      <div style="font-size:.72rem;color:var(--muted)">未テスト ${cnt}語</div></div>
+      ${sel ? '<span class="c-accent">✓</span>' : ''}
+    </div>`;
+      }).join('');
+      updTestBtn();
+      const cs = [10, 20, 50, 9999];
+      document.querySelectorAll('.count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === selCount_v));
+      document.getElementById('dir-en').classList.toggle('sel', selDir_v === 'en2ja');
+      document.getElementById('dir-ja').classList.toggle('sel', selDir_v === 'ja2en');
+    }
+    function selFolder(fid) { selFID = fid; renderTestSetup(); }
+    function updTestBtn() {
+      const btn = document.getElementById('start-test-btn'), info = document.getElementById('untagged-info');
+      if (!selFID) { btn.disabled = true; btn.style.opacity = '.45'; btn.textContent = 'フォルダを選択してください'; if (info) info.textContent = ''; return; }
+      const n = wInFolder(selFID).filter(w => !w.tag).length;
+      if (n === 0) {
+        btn.disabled = true; btn.style.opacity = '.45'; btn.textContent = '未テストの単語がありません';
+        if (info) info.innerHTML = '<span style="color:var(--yellow)">⚠ このフォルダに未テスト単語がありません</span>';
+      }
+      else {
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'テスト開始 →';
+        if (info) info.innerHTML = `未テストの単語: <strong>${n}語</strong>`;
+      }
+    }
+    function selCount(n) {
+      selCount_v = n;
+      const cs = [10, 20, 50, 9999];
+      document.querySelectorAll('.count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === n));
+      updTestBtn();
+    }
+    function selDir(d) {
+      selDir_v = d;
+      document.getElementById('dir-en').classList.toggle('sel', d === 'en2ja');
+      document.getElementById('dir-ja').classList.toggle('sel', d === 'ja2en');
+    }
+    function startTest() {
+      if (!selFID) return;
+      const ws = shuffle(wInFolder(selFID).filter(w => !w.tag)).slice(0, Math.min(selCount_v, 9999));
+      if (!ws.length) return;
+      createSes('test', ws, selDir_v, selFID); go('quiz'); renderQuestion();
+    }
+
+    // ── REVIEW ───────────────────────────────────────────
+    function openReviewSheet() {
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">復習モードを選択</div>
+    <div class="sec-label">フォルダ絞り込み（任意）</div>
+    <div id="rv-fsel" style="margin-bottom:14px"></div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-yellow btn-full" id="rv-btn">🔄 不安・未知を復習</button>
+      <div class="card-flat" style="font-size:.75rem;color:var(--muted);line-height:1.6">
+        2回正解で完了。誤答数で<span class="c-accent">完璧</span>（0回）・<span class="c-yellow">不安</span>（1回）・<span class="c-red">未知</span>（2回以上）に再タグ付け</div>
+      <button class="btn btn-ghost btn-full" id="pf-btn" style="margin-top:2px">⭐ 完璧を確認</button>
+      <div class="card-flat" style="font-size:.75rem;color:var(--muted);line-height:1.6">
+        各単語1回のみ出題。正解で<span class="c-accent">完璧</span>維持、不正解で<span class="c-yellow">不安</span>にタグ変更。</div>
+      <button class="btn btn-ghost btn-full" id="rv-cl">キャンセル</button></div>`;
+
+      let rvFID = null;
+      const fsel = sh.querySelector('#rv-fsel');
+      fsel.innerHTML = `<div class="folder-sel-card sel" data-fid="" style="margin-bottom:6px">
+    <span style="font-size:1.2rem">🌐</span>
+    <div style="flex:1"><div style="font-weight:700;font-size:.88rem">全フォルダ</div></div>
+    <span class="c-accent">✓</span></div>`+
+        db.folders.map(f => `<div class="folder-sel-card" data-fid="${f.id}" style="margin-bottom:6px">
+    <span style="font-size:1.2rem">📁</span>
+    <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${esc(f.name)}</div></div>
+    <span class="c-accent" style="display:none">✓</span></div>`).join('');
+
+      fsel.querySelectorAll('.folder-sel-card').forEach(c => {
+        c.addEventListener('click', () => {
+          rvFID = c.dataset.fid || null;
+          fsel.querySelectorAll('.folder-sel-card').forEach(x => {
+            const match = x.dataset.fid === (rvFID || '');
+            x.classList.toggle('sel', match);
+            x.querySelector('.c-accent').style.display = match ? '' : 'none';
+          });
+        });
+      });
+
+      const close = () => { bd.remove(); sh.remove(); };
+      bd.onclick = close;
+      sh.querySelector('#rv-cl').onclick = close;
+      sh.querySelector('#rv-btn').onclick = () => { close(); startReview('review', rvFID); };
+      sh.querySelector('#pf-btn').onclick = () => { close(); startReview('perfect', rvFID); };
+      document.body.append(bd, sh);
+      document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('n-review')?.classList.add('active');
+    }
+    function startReview(mode, fid) {
+      const pool = fid ? wInFolder(fid) : db.words;
+      const ws = mode === 'review' ? pool.filter(w => w.tag === '不安' || w.tag === '未知') : pool.filter(w => w.tag === '完璧');
+      if (!ws.length) { toast(mode === 'review' ? '不安・未知タグの単語がありません' : '完璧タグの単語がありません'); return; }
+      createSes(mode, shuffle([...ws]), selDir_v, fid);
+      go('quiz'); renderQuestion();
+    }
+
+    // ── SESSION ──────────────────────────────────────────
+    let session = null, locked = false;
+    function createSes(mode, words, dir, fid) {
+      session = {
+        mode, dir, folderId: fid || null,
+        items: words.map(w => ({ word: { ...w }, correct: 0, wrong: 0, done: false })),
+        queue: words.map((_, i) => i), cTotal: 0, wTotal: 0
+      };
+      saveSes();
+    }
+    function saveSes() { localStorage.setItem(SES_KEY, JSON.stringify(session)); }
+    function clearSes() { localStorage.removeItem(SES_KEY); session = null; }
+
+    // ── QUIZ ─────────────────────────────────────────────
+    function renderQuestion() {
+      locked = false;
+      if (!session || !session.queue.length) { finishQuiz(); return; }
+      const item = session.items[session.queue[0]], word = item.word;
+      const done = session.items.filter(i => i.done).length, total = session.items.length;
+      document.getElementById('q-pfill').style.width = (done / total * 100) + '%';
+      document.getElementById('q-ptxt').textContent = done + '/' + total;
+      document.getElementById('q-sc').textContent = '✓ ' + session.cTotal;
+      document.getElementById('q-sw').textContent = '✗ ' + session.wTotal;
+      document.getElementById('q-sm').textContent = { test: 'テスト', review: '復習', perfect: '完璧確認' }[session.mode] || '';
+
+      const isEn = session.dir === 'en2ja';
+      document.getElementById('q-lbl').textContent = isEn ? '英語 → 日本語' : '日本語 → 英語';
+      const qw = document.getElementById('q-word');
+      qw.className = isEn ? 'q-word' : 'q-word-jp';
+      qw.textContent = isEn ? word.en : word.ja;
+
+      const fb_badge = document.getElementById('q-folder-badge');
+      fb_badge.textContent = (() => { const f = fById(word.folderId); return f ? '📁 ' + f.name : ''; })();
+
+      const sb = document.getElementById('speak-btn');
+      if (isEn) { sb.style.display = 'inline-block'; speak(word.en); }
+      else { sb.style.display = 'none'; window.speechSynthesis?.cancel(); }
+
+      const dotsEl = document.getElementById('q-dots');
+      if (session.mode === 'perfect') { dotsEl.innerHTML = ''; }
+      else {
+        let d = '';
+        for (let i = 0; i < 2; i++)d += `<div class="q-dot${i < item.correct ? ' q-dot-ok' : ''}"></div>`;
+        for (let i = 0; i < item.wrong; i++)d += '<div class="q-dot q-dot-bad"></div>';
+        dotsEl.innerHTML = d;
+      }
+
+      // choices – prefer same-folder distractors
+      const pool = db.words.filter(w => w.id !== word.id);
+      const sf = shuffle(pool.filter(w => w.folderId === word.folderId)).slice(0, 3);
+      const ex = shuffle(pool.filter(w => w.folderId !== word.folderId)).slice(0, 3 - sf.length);
+      const opts = shuffle([word, ...sf, ...ex].slice(0, 4));
+
+      const grid = document.getElementById('choices');
+      grid.innerHTML = '';
+      opts.forEach(w => {
+        const b = document.createElement('button');
+        b.className = 'ch-btn'; b.textContent = isEn ? w.ja : w.en; b.dataset.ok = w.id === word.id ? '1' : '0';
+        b.addEventListener('click', () => pick(b, item));
+        grid.appendChild(b);
+      });
+
+      const fb = document.getElementById('fb');
+      fb.className = 'fb-box'; fb.textContent = '選択肢を選んでください';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('next-ph').style.display = 'block';
+    }
+
+    function pick(btn, item) {
+      if (locked) return; locked = true;
+      const isOk = btn.dataset.ok === '1', word = item.word, ans = session.dir === 'en2ja' ? word.ja : word.en;
+      document.querySelectorAll('.ch-btn').forEach(b => { b.disabled = true; if (b.dataset.ok === '1') b.classList.add('ok'); });
+      if (!isOk) btn.classList.add('ng');
+      const fb = document.getElementById('fb');
+      if (isOk) {
+        item.correct++; session.cTotal++;
+        if (session.mode === 'perfect') { finishItem(item, '完璧'); fb.className = 'fb-box ok'; fb.innerHTML = '✅ 正解！<strong class="c-accent">完璧</strong>を維持！'; }
+        else if (item.correct >= 2) {
+          const tag = item.wrong === 0 ? '完璧' : item.wrong === 1 ? '不安' : '未知';
+          finishItem(item, tag);
+          const cls = { 完璧: 'c-accent', 不安: 'c-yellow', 未知: 'c-red' }[tag];
+          fb.className = 'fb-box ok'; fb.innerHTML = `✅ 正解！完了 → <strong class="${cls}">${tag}</strong>`;
+        } else {
+          session.queue.push(session.queue.shift());
+          fb.className = 'fb-box ok'; fb.innerHTML = `✅ 正解！あと${2 - item.correct}回正解で完了`;
+        }
+      } else {
+        item.wrong++; session.wTotal++;
+        if (session.mode === 'perfect') { finishItem(item, '不安'); fb.className = 'fb-box ng'; fb.innerHTML = `❌ 不正解。正解: <strong>${ans}</strong>。<span class="c-yellow">不安</span>に変更`; }
+        else { session.queue.push(session.queue.shift()); fb.className = 'fb-box ng'; fb.innerHTML = `❌ 不正解。正解: <strong>${ans}</strong>。もう一度出題されます`; }
+      }
+      if (session.mode !== 'perfect') {
+        let d = '';
+        for (let i = 0; i < 2; i++)d += `<div class="q-dot${i < item.correct ? ' q-dot-ok' : ''}"></div>`;
+        for (let i = 0; i < item.wrong; i++)d += '<div class="q-dot q-dot-bad"></div>';
+        document.getElementById('q-dots').innerHTML = d;
+      }
+      saveSes();
+      document.getElementById('next-btn').style.display = 'block';
+      document.getElementById('next-ph').style.display = 'none';
+    }
+
+    function finishItem(item, tag) {
+      item.done = true; item.word.tag = tag;
+      const w = db.words.find(w => w.id === item.word.id); if (w) { w.tag = tag; saveDB(); }
+      session.queue.shift();
+    }
+    function nextWord() { if (!session || !session.queue.length) { finishQuiz(); return; } renderQuestion(); }
+    function exitQuiz() { if (confirm('テストを中断しますか？進捗は保存されます。')) { saveSes(); go('home'); } }
+    function finishQuiz() { const s = session; clearSes(); showResult(s); }
+
+    // ── RESULT ───────────────────────────────────────────
+    function showResult(s) {
+      if (!s) { go('home'); return; }
+      const items = s.items;
+      const p = items.filter(i => i.word.tag === '完璧').length, u = items.filter(i => i.word.tag === '不安').length,
+        k = items.filter(i => i.word.tag === '未知').length, total = items.length;
+      const pct = total > 0 ? Math.round(p / total * 100) : 0;
+      document.getElementById('res-score').innerHTML = `${p}<small>/${total}</small>`;
+      document.getElementById('res-msg').textContent = ([[100, '🎉 パーフェクト！'], [80, '👍 素晴らしい！'], [60, '📚 もう少し復習を'], [0, '💪 復習モードで苦手を克服！']].find(([m]) => pct >= m) || ['', ''])[1];
+      const bar = document.getElementById('res-bar'); bar.innerHTML = '';
+      [[p, 'rb-p'], [u, 'rb-u'], [k, 'rb-k']].forEach(([n, cls]) => { if (n > 0) { const seg = document.createElement('div'); seg.className = cls; seg.style.flex = n; bar.appendChild(seg); } });
+      document.getElementById('rs-p').textContent = p;
+      document.getElementById('rs-u').textContent = u;
+      document.getElementById('rs-k').textContent = k;
+      const acts = document.getElementById('res-actions'); acts.innerHTML = '';
+      const rvP = s.folderId ? wInFolder(s.folderId).filter(w => w.tag === '不安' || w.tag === '未知').length : db.words.filter(w => w.tag === '不安' || w.tag === '未知').length;
+      if (rvP > 0) { const b = document.createElement('button'); b.className = 'btn btn-yellow btn-full'; b.textContent = `🔄 不安・未知を復習（${rvP}語）`; b.onclick = () => startReview('review', s.folderId); acts.appendChild(b); }
+      const un = s.folderId ? wInFolder(s.folderId).filter(w => !w.tag).length : db.words.filter(w => !w.tag).length;
+      if (un > 0) { const b = document.createElement('button'); b.className = 'btn btn-blue btn-full'; b.textContent = `🎯 次のテストへ（残り${un}語）`; b.onclick = () => { selFID = s.folderId; go('test-setup'); }; acts.appendChild(b); }
+      const hb = document.createElement('button'); hb.className = 'btn btn-ghost btn-full'; hb.textContent = '🏠 ホームへ戻る'; hb.onclick = () => go('home'); acts.appendChild(hb);
+      go('result');
+    }
+
+    // ── ADD ──────────────────────────────────────────────
+    function renderAdd() {
+      ['bulk-fid', 'single-fid'].forEach(id => {
+        const el = document.getElementById(id); if (!el) return;
+        const cur = el.value || DEFAULT_FID;
+        el.innerHTML = db.folders.map(f => `<option value="${f.id}" ${f.id === cur ? 'selected' : ''}>${esc(f.name)}</option>`).join('');
+      });
+    }
+    function switchAddTab(t) {
+      document.getElementById('add-bulk-area').style.display = t === 'bulk' ? 'block' : 'none';
+      document.getElementById('add-single-area').style.display = t === 'single' ? 'block' : 'none';
+      document.getElementById('tab-bulk').classList.toggle('active', t === 'bulk');
+      document.getElementById('tab-single').classList.toggle('active', t === 'single');
+    }
+    function addBulk() {
+      const raw = document.getElementById('bulk-txt').value.trim();
+      const fid = document.getElementById('bulk-fid').value || DEFAULT_FID;
+      const errEl = document.getElementById('bulk-err');
+      if (!raw) { showErr(errEl, '単語を入力してください'); return; }
+      const added = [], dupes = [];
+      raw.split('\n').forEach(line => {
+        const l = line.trim(); if (!l) return;
+        const sep = l.includes('\t') ? '\t' : ',';
+        const p = l.split(sep).map(s => s.trim()).filter(Boolean);
+        if (p.length < 2) return;
+        if (db.words.some(w => w.en.toLowerCase() === p[0].toLowerCase())) { dupes.push(p[0]); return; }
+        added.push({ id: 'w' + Date.now() + Math.random(), en: p[0], ja: p[1], tag: null, folderId: fid, addedAt: Date.now() });
+      });
+      if (!added.length) { showErr(errEl, dupes.length ? `全て重複: ${dupes.join(', ')}` : 'パースできる単語がありませんでした'); return; }
+      db.words.push(...added); saveDB(); errEl.style.display = 'none';
+      document.getElementById('bulk-txt').value = '';
+      toast(`✅ ${added.length}語を「${fById(fid)?.name}」に追加${dupes.length ? `（${dupes.length}語重複スキップ）` : ''}`);
+    }
+    function addSingle() {
+      const en = document.getElementById('single-en').value.trim(), ja = document.getElementById('single-ja').value.trim();
+      const fid = document.getElementById('single-fid').value || DEFAULT_FID;
+      const errEl = document.getElementById('single-err');
+      if (!en || !ja) { showErr(errEl, '英単語と日本語の両方を入力してください'); return; }
+      if (db.words.some(w => w.en.toLowerCase() === en.toLowerCase())) { showErr(errEl, `「${en}」はすでに登録されています`); return; }
+      db.words.push({ id: 'w' + Date.now(), en, ja, tag: null, folderId: fid, addedAt: Date.now() });
+      saveDB(); errEl.style.display = 'none';
+      document.getElementById('single-en').value = ''; document.getElementById('single-ja').value = '';
+      toast(`✅「${en}」を「${fById(fid)?.name}」に追加しました`);
+    }
+    function exportCSV() {
+      const rows = ['English,Japanese,Tag,Folder', ...db.words.map(w => `${w.en},${w.ja},${w.tag || ''},${fById(w.folderId)?.name || ''}`)];
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })), download: 'toeic_words.csv' });
+      a.click();
+    }
+    function resetAllTags() {
+      if (!confirm('全ての単語のタグをリセットして最初からやり直しますか？')) return;
+      db.words.forEach(w => w.tag = null); saveDB(); clearSes(); toast('✅ 全タグをリセットしました'); renderHome();
+    }
+
+    // ── TTS ──────────────────────────────────────────────
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1;
+      const btn = document.getElementById('speak-btn'), icon = document.getElementById('speak-icon');
+      u.onstart = () => { btn?.classList.add('speaking'); if (icon) icon.textContent = '🔉'; };
+      u.onend = u.onerror = () => { btn?.classList.remove('speaking'); if (icon) icon.textContent = '🔊'; };
+      speechSynthesis.speak(u);
+    }
+    function speakCurrent() { if (!session || !session.queue.length) return; speak(session.items[session.queue[0]].word.en); }
+
+    // ── UTILS ─────────────────────────────────────────────
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+    function toast(msg) {
+      document.getElementById('_toast')?.remove();
+      const el = Object.assign(document.createElement('div'), { id: '_toast', className: 'toast', textContent: msg });
+      document.body.appendChild(el); setTimeout(() => el.remove(), 2600);
+    }
+    function sheet() {
+      const bd = document.createElement('div'); bd.className = 'overlay-backdrop';
+      const sh = document.createElement('div'); sh.className = 'overlay-sheet';
+      return [bd, sh];
+    }
+    function inputSheet(title, ph, def, cb) {
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">${esc(title)}</div>
+    <div class="f-group"><input class="f-input" id="_si" placeholder="${esc(ph)}" value="${esc(def)}" type="text"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-full" id="_sc">キャンセル</button>
+      <button class="btn btn-blue btn-full"  id="_so">確定</button></div>`;
+      const close = () => { bd.remove(); sh.remove(); };
+      const ok = () => { const v = sh.querySelector('#_si').value; close(); cb(v); };
+      bd.onclick = close;
+      sh.querySelector('#_sc').onclick = close;
+      sh.querySelector('#_so').onclick = ok;
+      sh.querySelector('#_si').addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
+      document.body.append(bd, sh);
+      setTimeout(() => sh.querySelector('#_si').focus(), 100);
+    }
+
+    // ── PWA ──────────────────────────────────────────────
+    (function () {
+      const m = {
+        name: 'TOEIC 単語帳', short_name: 'TOEIC単語帳', start_url: '.', display: 'standalone',
+        background_color: '#0a0e1a', theme_color: '#0a0e1a',
+        icons: [{ src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23111827'/%3E%3Ctext x='256' y='360' font-family='Courier New' font-size='280' font-weight='700' fill='%2360a5fa' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }]
+      };
+      document.head.appendChild(Object.assign(document.createElement('link'),
+        { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' })) }));
+    })();
+
+    loadDB(); go('home');
+  </script>
+</body>
+
+</html>
