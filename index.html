@@ -1068,7 +1068,7 @@
     </div>
     <div class="card">
       <div class="sec-label">出題数（未テスト単語から）</div>
-      <div class="count-grid">
+      <div class="count-grid" id="test-count-grid">
         <button class="cnt-btn sel" onclick="selCount(10)">10</button>
         <button class="cnt-btn" onclick="selCount(20)">20</button>
         <button class="cnt-btn" onclick="selCount(50)">50</button>
@@ -1428,7 +1428,7 @@
       if (selFID) sel.value = selFID;
       updTestBtn();
       const cs = [10, 20, 50, 9999];
-      document.querySelectorAll('.count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === selCount_v));
+      document.querySelectorAll('#test-count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === selCount_v));
       document.getElementById('dir-en').classList.toggle('sel', selDir_v === 'en2ja');
       document.getElementById('dir-ja').classList.toggle('sel', selDir_v === 'ja2en');
     }
@@ -1452,7 +1452,7 @@
     function selCount(n) {
       selCount_v = n;
       const cs = [10, 20, 50, 9999];
-      document.querySelectorAll('.count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === n));
+      document.querySelectorAll('#test-count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === n));
       updTestBtn();
     }
     function selDir(d) {
