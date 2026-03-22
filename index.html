@@ -613,12 +613,24 @@
     }
 
     .quiz-body {
-      flex: 1;
-      overflow-y: auto;
+      display: none
+    }
+
+    .quiz-top {
+      flex-shrink: 0;
       padding: 10px 16px 0;
       display: flex;
       flex-direction: column;
       gap: 10px
+    }
+
+    .quiz-spacer {
+      flex: 1
+    }
+
+    .quiz-bottom {
+      flex-shrink: 0;
+      padding: 0 16px
     }
 
     .q-card {
@@ -705,7 +717,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 9px;
-      flex-shrink: 0
+      flex-shrink: 0;
+      margin-bottom: 10px
     }
 
     .ch-btn {
@@ -1095,7 +1108,7 @@
           <span class="q-chip q-chip-m" id="q-sm"></span>
         </div>
       </div>
-      <div class="quiz-body">
+      <div class="quiz-top">
         <div class="q-card">
           <div class="q-type-lbl" id="q-lbl">英語 → 日本語</div>
           <div id="q-word" class="q-word">—</div>
@@ -1103,8 +1116,11 @@
           <div class="q-dots" id="q-dots"></div>
           <div class="q-folder-badge" id="q-folder-badge"></div>
         </div>
-        <div class="choices-grid" id="choices"></div>
         <div class="fb-box" id="fb">選択肢を選んでください</div>
+      </div>
+      <div class="quiz-spacer"></div>
+      <div class="quiz-bottom">
+        <div class="choices-grid" id="choices"></div>
       </div>
       <div class="quiz-ftr">
         <button class="btn btn-blue btn-full" id="next-btn" onclick="nextWord()" style="display:none">次へ →</button>
@@ -1610,11 +1626,11 @@
         dotsEl.innerHTML = d;
       }
 
-      // choices – prefer same-folder distractors
+      // choices – prefer same-folder distractors, 6 options total
       const pool = db.words.filter(w => w.id !== word.id);
-      const sf = shuffle(pool.filter(w => w.folderId === word.folderId)).slice(0, 3);
-      const ex = shuffle(pool.filter(w => w.folderId !== word.folderId)).slice(0, 3 - sf.length);
-      const opts = shuffle([word, ...sf, ...ex].slice(0, 4));
+      const sf = shuffle(pool.filter(w => w.folderId === word.folderId)).slice(0, 5);
+      const ex = shuffle(pool.filter(w => w.folderId !== word.folderId)).slice(0, 5 - sf.length);
+      const opts = shuffle([word, ...sf, ...ex].slice(0, 6));
 
       const grid = document.getElementById('choices');
       grid.innerHTML = '';
@@ -1791,7 +1807,7 @@
       if (!window.speechSynthesis) return;
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1;
+      u.lang = 'en-US'; u.rate = 1; u.pitch = 1;
       const btn = document.getElementById('speak-btn'), icon = document.getElementById('speak-icon');
       u.onstart = () => { btn?.classList.add('speaking'); if (icon) icon.textContent = '🔉'; };
       u.onend = u.onerror = () => { btn?.classList.remove('speaking'); if (icon) icon.textContent = '🔊'; };
