@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>TOEIC 単語帳</title>
+  <title>単語帳</title>
   <meta name="theme-color" content="#0a0e1a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TOEIC単語帳">
+  <meta name="apple-mobile-web-app-title" content="単語帳">
   <style>
     :root {
       --bg: #0a0e1a;
@@ -974,15 +974,58 @@
     <div class="sec-label" style="margin-top:4px">クイックスタート</div>
     <div style="display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-blue btn-full" onclick="go('test-setup')">🎯 テストを始める</button>
-      <button class="btn btn-yellow btn-full" onclick="openReviewSheet()">🔄 復習する</button>
+      <button class="btn btn-yellow btn-full" onclick="go('review-setup')">🔄 復習する</button>
     </div>
+  </section>
+
+  <!-- REVIEW SETUP -->
+  <section id="screen-review-setup" class="screen">
+    <div class="s-head">
+      <button class="btn btn-ghost btn-sm" onclick="go('home')">← 戻る</button>
+      <span class="s-title">復習設定</span>
+      <span></span>
+    </div>
+    <div class="card">
+      <div class="sec-label">復習モード</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="cnt-btn sel" id="rv-mode-review" onclick="selRvMode('review')">🔄 不安・未知</button>
+        <button class="cnt-btn" id="rv-mode-perfect" onclick="selRvMode('perfect')">⭐ 完璧確認</button>
+      </div>
+      <div id="rv-mode-desc" class="card-flat"
+        style="margin-top:10px;margin-bottom:0;font-size:.78rem;color:var(--muted);line-height:1.7"></div>
+    </div>
+    <div class="card">
+      <div class="sec-label">フォルダを選択</div>
+      <select class="f-select" id="rv-fid" onchange="updRvBtn()"></select>
+    </div>
+    <div class="card">
+      <div class="sec-label">出題数</div>
+      <div class="count-grid" id="rv-count-grid">
+        <button class="cnt-btn sel" onclick="selRvCount(10)">10</button>
+        <button class="cnt-btn" onclick="selRvCount(20)">20</button>
+        <button class="cnt-btn" onclick="selRvCount(50)">50</button>
+        <button class="cnt-btn" onclick="selRvCount(9999)">全て</button>
+      </div>
+      <div id="rv-info" style="font-size:.8rem;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div class="card">
+      <div class="sec-label">出題方向</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="cnt-btn sel" id="rv-dir-en" onclick="selRvDir('en2ja')">英 → 日</button>
+        <button class="cnt-btn" id="rv-dir-ja" onclick="selRvDir('ja2en')">日 → 英</button>
+      </div>
+    </div>
+    <button class="btn btn-yellow btn-full" id="start-review-btn" onclick="startReviewFromSetup()">復習開始 →</button>
   </section>
 
   <!-- FOLDERS -->
   <section id="screen-folders" class="screen">
     <div class="s-head">
       <span class="s-title">フォルダ</span>
-      <button class="btn btn-blue btn-sm" onclick="openNewFolderSheet()">＋ 新規</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="createDefaultFolder()">デフォルト</button>
+        <button class="btn btn-blue btn-sm" onclick="openNewFolderSheet()">＋ 新規</button>
+      </div>
     </div>
     <div id="folder-list-el"></div>
   </section>
@@ -1014,7 +1057,7 @@
     </div>
     <div class="card">
       <div class="sec-label">フォルダを選択（必須）</div>
-      <div id="test-folder-list"></div>
+      <select class="f-select" id="test-folder-sel" onchange="onTestFolderChange()"></select>
     </div>
     <div class="card">
       <div class="sec-label">出題方向</div>
@@ -1140,10 +1183,7 @@
     </div>
     <div class="card" style="margin-top:16px">
       <div class="sec-label" style="margin-bottom:10px">データ管理</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 CSVエクスポート</button>
-        <button class="btn btn-danger btn-sm" onclick="resetAllTags()">🔄 全タグリセット</button>
-      </div>
+      <button class="btn btn-ghost btn-full" onclick="openExportSheet()">📤 エクスポート</button>
     </div>
   </section>
 
@@ -1155,7 +1195,7 @@
     <button class="bnav-btn" id="n-add" onclick="go('add')"> <span class="ni">➕</span><span>追加</span></button>
     <button class="bnav-btn" id="n-test-setup" onclick="go('test-setup')"> <span
         class="ni">🎯</span><span>テスト</span></button>
-    <button class="bnav-btn" id="n-review" onclick="openReviewSheet()"><span
+    <button class="bnav-btn" id="n-review" onclick="go('review-setup')"><span
         class="ni">🔄</span><span>復習</span></button>
   </nav>
 
@@ -1216,7 +1256,7 @@
     function wInFolder(fid) { return db.words.filter(w => w.folderId === fid); }
 
     // ── NAVIGATION ──────────────────────────────────────
-    const NAV_MAP = { home: 'n-home', folders: 'n-folders', 'folder-detail': 'n-folders', add: 'n-add', 'test-setup': 'n-test-setup' };
+    const NAV_MAP = { home: 'n-home', folders: 'n-folders', 'folder-detail': 'n-folders', add: 'n-add', 'test-setup': 'n-test-setup', 'review-setup': 'n-review' };
     function go(name) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('screen-' + name)?.classList.add('active');
@@ -1226,6 +1266,7 @@
       if (name === 'home') renderHome();
       if (name === 'folders') renderFolders();
       if (name === 'test-setup') renderTestSetup();
+      if (name === 'review-setup') renderReviewSetup();
       if (name === 'add') renderAdd();
       window.scrollTo(0, 0);
     }
@@ -1283,6 +1324,14 @@
       <span style="color:var(--muted)">›</span></div>`;
       }).join('') + '</div>';
     }
+    function createDefaultFolder() {
+      const fid = 'f' + Date.now();
+      db.folders.push({ id: fid, name: 'デフォルト', createdAt: Date.now() });
+      SEED.forEach(([en, ja], i) => {
+        db.words.push({ id: 'w' + Date.now() + i + Math.random(), en, ja, tag: null, folderId: fid, addedAt: Date.now() + i });
+      });
+      saveDB(); renderFolders(); renderAdd(); toast(`📁 デフォルトフォルダを生成しました（${SEED.length}語）`);
+    }
     function openNewFolderSheet() {
       inputSheet('新規フォルダ', 'フォルダ名（例：TOEIC 600点）', '', name => {
         if (!name.trim()) return;
@@ -1292,8 +1341,8 @@
     }
 
     // ── FOLDER DETAIL ────────────────────────────────────
-    let curFID = null, fdFilt = 'all';
-    function openFD(fid) { curFID = fid; fdFilt = 'all'; renderFD(); go('folder-detail'); }
+    let curFID = null, fdFilt = 'all', fdEditMode = false;
+    function openFD(fid) { curFID = fid; fdFilt = 'all'; fdEditMode = false; renderFD(); go('folder-detail'); }
     function renderFD() {
       const f = fById(curFID); if (!f) { go('folders'); return; }
       const ws = wInFolder(curFID);
@@ -1310,33 +1359,58 @@
       const fil = fdFilt === 'all' ? ws : fdFilt === 'none' ? ws.filter(w => !w.tag) : ws.filter(w => w.tag === fdFilt);
       const el = document.getElementById('fd-word-list');
       if (!fil.length) { el.innerHTML = `<div class="empty-state"><div class="ei">📭</div><p>該当する単語がありません</p></div>`; return; }
-      el.innerHTML = fil.map(w => `<div class="word-row">
+      el.innerHTML = fil.map(w => `<div class="word-row" id="wr-${w.id}">
     <span class="word-en">${esc(w.en)}</span><span class="word-ja">${esc(w.ja)}</span>
-    <span class="badge badge-${w.tag || 'untested'}">${w.tag || '未テスト'}</span></div>`).join('');
+    <span class="badge badge-${w.tag || 'untested'}">${w.tag || '未テスト'}</span>
+    <button onclick="deleteWord('${w.id}')" style="background:none;border:none;color:var(--red);font-size:1.1rem;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;display:${fdEditMode ? 'block' : 'none'}" title="削除">🗑</button>
+  </div>`).join('');
+      // 編集モード中はタイトルにバッジを表示
+      const titleEl = document.getElementById('fd-title');
+      titleEl.innerHTML = fdEditMode
+        ? `${esc(f.name)} <span style="font-size:.65rem;background:rgba(248,113,113,.2);color:var(--red);padding:2px 8px;border-radius:99px;font-weight:700;vertical-align:middle">編集中</span>`
+        : esc(f.name);
     }
     function fdFilter(f) { fdFilt = f; renderFD(); }
+    function deleteWord(wid) {
+      const w = db.words.find(x => x.id === wid); if (!w) return;
+      if (!confirm(`「${w.en}」を削除しますか？`)) return;
+      db.words = db.words.filter(x => x.id !== wid); saveDB();
+      // アニメーションで行を消してから再描画
+      const row = document.getElementById('wr-' + wid);
+      if (row) { row.style.transition = 'opacity .2s'; row.style.opacity = '0'; setTimeout(() => renderFD(), 200); }
+      else renderFD();
+      toast(`🗑「${w.en}」を削除しました`);
+    }
     function openFolderMenu() {
       const f = fById(curFID); if (!f) return;
-      const isD = f.id === DEFAULT_FID;
       const [bd, sh] = sheet();
+      const isDefault = false;
       sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">📁 ${esc(f.name)}</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-ghost btn-full" id="fm-r">✏️ フォルダ名を変更</button>
-      ${isD ? '' : '<button class="btn btn-danger btn-full" id="fm-d">🗑 フォルダを削除</button>'}
+      <button class="btn btn-ghost btn-full" id="fm-e">${fdEditMode ? '✅ 編集モードを終了' : '✏️ 単語を編集（削除）'}</button>
+      <button class="btn btn-ghost btn-full" id="fm-r">📝 フォルダ名を変更</button>
+      <button class="btn btn-danger btn-full" id="fm-d">🗑 フォルダを削除</button>
       <button class="btn btn-ghost btn-full" id="fm-c">キャンセル</button></div>`;
       const close = () => { bd.remove(); sh.remove(); };
       bd.onclick = close;
       sh.querySelector('#fm-c').onclick = close;
+      sh.querySelector('#fm-e').onclick = () => {
+        close();
+        fdEditMode = !fdEditMode;
+        renderFD();
+        toast(fdEditMode ? '🗑 削除ボタンが表示されました' : '✅ 編集モードを終了しました');
+      };
       sh.querySelector('#fm-r').onclick = () => {
         close(); inputSheet('フォルダ名を変更', '新しい名前', f.name, name => {
           if (!name.trim()) return; f.name = name.trim(); saveDB(); renderFD(); toast('✅ フォルダ名を変更しました');
         });
       };
-      if (!isD) sh.querySelector('#fm-d').onclick = () => {
+      sh.querySelector('#fm-d').onclick = () => {
         close();
-        if (!confirm(`「${f.name}」を削除します。\n中の単語はデフォルトフォルダに移動されます。`)) return;
-        db.words.forEach(w => { if (w.folderId === f.id) w.folderId = DEFAULT_FID; });
-        db.folders = db.folders.filter(x => x.id !== f.id); saveDB(); toast('🗑 フォルダを削除しました'); go('folders');
+        db.words = db.words.filter(w => w.folderId !== f.id);
+        db.folders = db.folders.filter(x => x.id !== f.id);
+        if (selFID === f.id) selFID = null;
+        saveDB(); toast('🗑 フォルダを削除しました'); go('folders');
       };
       document.body.append(bd, sh);
     }
@@ -1344,26 +1418,27 @@
     // ── TEST SETUP ───────────────────────────────────────
     let selCount_v = 10, selDir_v = 'en2ja', selFID = null;
     function renderTestSetup() {
-      const el = document.getElementById('test-folder-list');
-      el.innerHTML = db.folders.map(f => {
-        const cnt = wInFolder(f.id).filter(w => !w.tag).length, sel = selFID === f.id;
-        return `<div class="folder-sel-card ${sel ? 'sel' : ''}" onclick="selFolder('${f.id}')">
-      <span style="font-size:1.3rem">📁</span>
-      <div style="flex:1"><div style="font-weight:700;font-size:.9rem">${esc(f.name)}</div>
-      <div style="font-size:.72rem;color:var(--muted)">未テスト ${cnt}語</div></div>
-      ${sel ? '<span class="c-accent">✓</span>' : ''}
-    </div>`;
+      const sel = document.getElementById('test-folder-sel');
+      const prevVal = selFID || sel.value;
+      sel.innerHTML = db.folders.map(f => {
+        const cnt = wInFolder(f.id).filter(w => !w.tag).length;
+        return `<option value="${f.id}" ${f.id === prevVal ? 'selected' : ''}>${esc(f.name)}（未テスト ${cnt}語）</option>`;
       }).join('');
+      if (!selFID && db.folders.length > 0) selFID = db.folders[0].id;
+      if (selFID) sel.value = selFID;
       updTestBtn();
       const cs = [10, 20, 50, 9999];
       document.querySelectorAll('.count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === selCount_v));
       document.getElementById('dir-en').classList.toggle('sel', selDir_v === 'en2ja');
       document.getElementById('dir-ja').classList.toggle('sel', selDir_v === 'ja2en');
     }
-    function selFolder(fid) { selFID = fid; renderTestSetup(); }
+    function onTestFolderChange() {
+      selFID = document.getElementById('test-folder-sel').value || null;
+      updTestBtn();
+    }
     function updTestBtn() {
       const btn = document.getElementById('start-test-btn'), info = document.getElementById('untagged-info');
-      if (!selFID) { btn.disabled = true; btn.style.opacity = '.45'; btn.textContent = 'フォルダを選択してください'; if (info) info.textContent = ''; return; }
+      if (!selFID || !db.folders.length) { btn.disabled = true; btn.style.opacity = '.45'; btn.textContent = 'フォルダを選択してください'; if (info) info.textContent = ''; return; }
       const n = wInFolder(selFID).filter(w => !w.tag).length;
       if (n === 0) {
         btn.disabled = true; btn.style.opacity = '.45'; btn.textContent = '未テストの単語がありません';
@@ -1392,57 +1467,83 @@
       createSes('test', ws, selDir_v, selFID); go('quiz'); renderQuestion();
     }
 
-    // ── REVIEW ───────────────────────────────────────────
-    function openReviewSheet() {
-      const [bd, sh] = sheet();
-      sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">復習モードを選択</div>
-    <div class="sec-label">フォルダ絞り込み（任意）</div>
-    <div id="rv-fsel" style="margin-bottom:14px"></div>
-    <div style="display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-yellow btn-full" id="rv-btn">🔄 不安・未知を復習</button>
-      <div class="card-flat" style="font-size:.75rem;color:var(--muted);line-height:1.6">
-        2回正解で完了。誤答数で<span class="c-accent">完璧</span>（0回）・<span class="c-yellow">不安</span>（1回）・<span class="c-red">未知</span>（2回以上）に再タグ付け</div>
-      <button class="btn btn-ghost btn-full" id="pf-btn" style="margin-top:2px">⭐ 完璧を確認</button>
-      <div class="card-flat" style="font-size:.75rem;color:var(--muted);line-height:1.6">
-        各単語1回のみ出題。正解で<span class="c-accent">完璧</span>維持、不正解で<span class="c-yellow">不安</span>にタグ変更。</div>
-      <button class="btn btn-ghost btn-full" id="rv-cl">キャンセル</button></div>`;
+    // ── REVIEW SETUP ─────────────────────────────────────
+    let rvMode_v = 'review', rvCount_v = 10, rvDir_v = 'en2ja';
+    const RV_DESC = {
+      review: '2回正解で完了。誤答数で <span class="c-accent">完璧</span>（0回）・<span class="c-yellow">不安</span>（1回）・<span class="c-red">未知</span>（2回以上）に再タグ付け。',
+      perfect: '各単語1回のみ出題。正解で <span class="c-accent">完璧</span> 維持、不正解で <span class="c-yellow">不安</span> にタグ変更。'
+    };
+    function renderReviewSetup() {
+      // folder select – first option is 全フォルダ
+      const sel = document.getElementById('rv-fid');
+      const prev = sel.value;
+      sel.innerHTML = `<option value="">全フォルダ</option>` +
+        db.folders.map(f => `<option value="${f.id}" ${f.id === prev ? 'selected' : ''}>${esc(f.name)}</option>`).join('');
 
-      let rvFID = null;
-      const fsel = sh.querySelector('#rv-fsel');
-      fsel.innerHTML = `<div class="folder-sel-card sel" data-fid="" style="margin-bottom:6px">
-    <span style="font-size:1.2rem">🌐</span>
-    <div style="flex:1"><div style="font-weight:700;font-size:.88rem">全フォルダ</div></div>
-    <span class="c-accent">✓</span></div>`+
-        db.folders.map(f => `<div class="folder-sel-card" data-fid="${f.id}" style="margin-bottom:6px">
-    <span style="font-size:1.2rem">📁</span>
-    <div style="flex:1"><div style="font-weight:700;font-size:.88rem">${esc(f.name)}</div></div>
-    <span class="c-accent" style="display:none">✓</span></div>`).join('');
+      document.getElementById('rv-mode-review').classList.toggle('sel', rvMode_v === 'review');
+      document.getElementById('rv-mode-perfect').classList.toggle('sel', rvMode_v === 'perfect');
+      document.getElementById('rv-mode-desc').innerHTML = RV_DESC[rvMode_v];
 
-      fsel.querySelectorAll('.folder-sel-card').forEach(c => {
-        c.addEventListener('click', () => {
-          rvFID = c.dataset.fid || null;
-          fsel.querySelectorAll('.folder-sel-card').forEach(x => {
-            const match = x.dataset.fid === (rvFID || '');
-            x.classList.toggle('sel', match);
-            x.querySelector('.c-accent').style.display = match ? '' : 'none';
-          });
-        });
-      });
-
-      const close = () => { bd.remove(); sh.remove(); };
-      bd.onclick = close;
-      sh.querySelector('#rv-cl').onclick = close;
-      sh.querySelector('#rv-btn').onclick = () => { close(); startReview('review', rvFID); };
-      sh.querySelector('#pf-btn').onclick = () => { close(); startReview('perfect', rvFID); };
-      document.body.append(bd, sh);
-      document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('n-review')?.classList.add('active');
+      const cs = [10, 20, 50, 9999];
+      document.querySelectorAll('#rv-count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === rvCount_v));
+      document.getElementById('rv-dir-en').classList.toggle('sel', rvDir_v === 'en2ja');
+      document.getElementById('rv-dir-ja').classList.toggle('sel', rvDir_v === 'ja2en');
+      updRvBtn();
+    }
+    function selRvMode(m) {
+      rvMode_v = m;
+      document.getElementById('rv-mode-review').classList.toggle('sel', m === 'review');
+      document.getElementById('rv-mode-perfect').classList.toggle('sel', m === 'perfect');
+      document.getElementById('rv-mode-desc').innerHTML = RV_DESC[m];
+      updRvBtn();
+    }
+    function selRvCount(n) {
+      rvCount_v = n;
+      const cs = [10, 20, 50, 9999];
+      document.querySelectorAll('#rv-count-grid .cnt-btn').forEach((b, i) => b.classList.toggle('sel', cs[i] === n));
+      updRvBtn();
+    }
+    function selRvDir(d) {
+      rvDir_v = d;
+      document.getElementById('rv-dir-en').classList.toggle('sel', d === 'en2ja');
+      document.getElementById('rv-dir-ja').classList.toggle('sel', d === 'ja2en');
+    }
+    function updRvBtn() {
+      const fid = document.getElementById('rv-fid')?.value || null;
+      const pool = fid ? wInFolder(fid) : db.words;
+      const avail = rvMode_v === 'review'
+        ? pool.filter(w => w.tag === '不安' || w.tag === '未知').length
+        : pool.filter(w => w.tag === '完璧').length;
+      const actual = Math.min(rvCount_v, avail);
+      const btn = document.getElementById('start-review-btn');
+      const info = document.getElementById('rv-info');
+      if (avail === 0) {
+        btn.disabled = true; btn.style.opacity = '.45';
+        btn.textContent = '復習開始 →';
+        if (info) info.innerHTML = `<span style="color:var(--yellow)">⚠ 対象の単語がありません</span>`;
+      } else {
+        btn.disabled = false; btn.style.opacity = '1';
+        btn.textContent = '復習開始 →';
+        if (info) info.innerHTML = `対象: <strong>${avail}語</strong>（出題: <strong>${actual}語</strong>）`;
+      }
+    }
+    function startReviewFromSetup() {
+      const fid = document.getElementById('rv-fid')?.value || null;
+      const pool = fid ? wInFolder(fid) : db.words;
+      const ws = rvMode_v === 'review'
+        ? pool.filter(w => w.tag === '不安' || w.tag === '未知')
+        : pool.filter(w => w.tag === '完璧');
+      if (!ws.length) { toast('対象の単語がありません'); return; }
+      const selected = shuffle([...ws]).slice(0, Math.min(rvCount_v, ws.length));
+      createSes(rvMode_v, selected, rvDir_v, fid);
+      go('quiz'); renderQuestion();
     }
     function startReview(mode, fid) {
+      // called from result screen buttons – use current rv settings for dir
       const pool = fid ? wInFolder(fid) : db.words;
       const ws = mode === 'review' ? pool.filter(w => w.tag === '不安' || w.tag === '未知') : pool.filter(w => w.tag === '完璧');
       if (!ws.length) { toast(mode === 'review' ? '不安・未知タグの単語がありません' : '完璧タグの単語がありません'); return; }
-      createSes(mode, shuffle([...ws]), selDir_v, fid);
+      createSes(mode, shuffle([...ws]), rvDir_v, fid);
       go('quiz'); renderQuestion();
     }
 
@@ -1584,7 +1685,7 @@
     function renderAdd() {
       ['bulk-fid', 'single-fid'].forEach(id => {
         const el = document.getElementById(id); if (!el) return;
-        const cur = el.value || DEFAULT_FID;
+        const cur = el.value || (db.folders[0]?.id || '');
         el.innerHTML = db.folders.map(f => `<option value="${f.id}" ${f.id === cur ? 'selected' : ''}>${esc(f.name)}</option>`).join('');
       });
     }
@@ -1596,7 +1697,7 @@
     }
     function addBulk() {
       const raw = document.getElementById('bulk-txt').value.trim();
-      const fid = document.getElementById('bulk-fid').value || DEFAULT_FID;
+      const fid = document.getElementById('bulk-fid').value || (db.folders[0]?.id || '');
       const errEl = document.getElementById('bulk-err');
       if (!raw) { showErr(errEl, '単語を入力してください'); return; }
       const added = [], dupes = [];
@@ -1605,7 +1706,7 @@
         const sep = l.includes('\t') ? '\t' : ',';
         const p = l.split(sep).map(s => s.trim()).filter(Boolean);
         if (p.length < 2) return;
-        if (db.words.some(w => w.en.toLowerCase() === p[0].toLowerCase())) { dupes.push(p[0]); return; }
+        if (db.words.some(w => w.folderId === fid && w.en.toLowerCase() === p[0].toLowerCase())) { dupes.push(p[0]); return; }
         added.push({ id: 'w' + Date.now() + Math.random(), en: p[0], ja: p[1], tag: null, folderId: fid, addedAt: Date.now() });
       });
       if (!added.length) { showErr(errEl, dupes.length ? `全て重複: ${dupes.join(', ')}` : 'パースできる単語がありませんでした'); return; }
@@ -1615,25 +1716,60 @@
     }
     function addSingle() {
       const en = document.getElementById('single-en').value.trim(), ja = document.getElementById('single-ja').value.trim();
-      const fid = document.getElementById('single-fid').value || DEFAULT_FID;
+      const fid = document.getElementById('single-fid').value || (db.folders[0]?.id || '');
       const errEl = document.getElementById('single-err');
       if (!en || !ja) { showErr(errEl, '英単語と日本語の両方を入力してください'); return; }
-      if (db.words.some(w => w.en.toLowerCase() === en.toLowerCase())) { showErr(errEl, `「${en}」はすでに登録されています`); return; }
+      if (db.words.some(w => w.folderId === fid && w.en.toLowerCase() === en.toLowerCase())) { showErr(errEl, `このフォルダに「${en}」はすでに登録されています`); return; }
       db.words.push({ id: 'w' + Date.now(), en, ja, tag: null, folderId: fid, addedAt: Date.now() });
       saveDB(); errEl.style.display = 'none';
       document.getElementById('single-en').value = ''; document.getElementById('single-ja').value = '';
       toast(`✅「${en}」を「${fById(fid)?.name}」に追加しました`);
     }
-    function exportCSV() {
-      const rows = ['English,Japanese,Tag,Folder', ...db.words.map(w => `${w.en},${w.ja},${w.tag || ''},${fById(w.folderId)?.name || ''}`)];
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })), download: 'toeic_words.csv' });
-      a.click();
-    }
-    function resetAllTags() {
-      if (!confirm('全ての単語のタグをリセットして最初からやり直しますか？')) return;
-      db.words.forEach(w => w.tag = null); saveDB(); clearSes(); toast('✅ 全タグをリセットしました'); renderHome();
+    function openExportSheet() {
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div>
+    <div class="sheet-title">📤 エクスポート</div>
+    <div class="f-group">
+      <label class="f-label">フォルダを選択</label>
+      <select class="f-select" id="exp-fid">
+        <option value="">全フォルダ</option>
+        ${db.folders.map(f => `<option value="${f.id}">${esc(f.name)}（${wInFolder(f.id).length}語）</option>`).join('')}
+      </select>
+    </div>
+    <div class="hint-box" style="margin-bottom:16px">
+      エクスポート形式は <code>英単語,日本語</code>（1行1単語）です。<br>
+      そのままアプリの「まとめて追加」に貼り付けられます。
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-blue btn-full" id="exp-paste">📋 クリップボードにコピー</button>
+      <button class="btn btn-ghost btn-full" id="exp-cl">キャンセル</button>
+    </div>`;
+      const close = () => { bd.remove(); sh.remove(); };
+      bd.onclick = close;
+      sh.querySelector('#exp-cl').onclick = close;
+      sh.querySelector('#exp-paste').onclick = () => {
+        const fid = sh.querySelector('#exp-fid').value || null;
+        const ws = fid ? wInFolder(fid) : db.words;
+        const text = ws.map(w => `${w.en},${w.ja}`).join('\n');
+        if (!text) { toast('⚠ 単語がありません'); return; }
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => toast('✅ クリップボードにコピーしました！')).catch(() => fallbackCopy(text));
+        } else { fallbackCopy(text); }
+      };
+      document.body.append(bd, sh);
     }
 
+    function fallbackCopy(text) {
+      const ta = Object.assign(document.createElement('textarea'), { value: text, style: 'position:fixed;opacity:0' });
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+      toast('✅ クリップボードにコピーしました！');
+    }
+
+    function exportCSV() {
+      // legacy – kept for compatibility
+      openExportSheet();
+    }
     // ── TTS ──────────────────────────────────────────────
     function speak(text) {
       if (!window.speechSynthesis) return;
@@ -1681,7 +1817,7 @@
     // ── PWA ──────────────────────────────────────────────
     (function () {
       const m = {
-        name: 'TOEIC 単語帳', short_name: 'TOEIC単語帳', start_url: '.', display: 'standalone',
+        name: '単語帳', short_name: '単語帳', start_url: '.', display: 'standalone',
         background_color: '#0a0e1a', theme_color: '#0a0e1a',
         icons: [{ src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23111827'/%3E%3Ctext x='256' y='360' font-family='Courier New' font-size='280' font-weight='700' fill='%2360a5fa' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }]
       };
