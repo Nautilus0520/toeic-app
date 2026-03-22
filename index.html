@@ -1394,7 +1394,8 @@
       el.innerHTML = fil.map(w => `<div class="word-row" id="wr-${w.id}">
     <span class="word-en">${esc(w.en)}</span><span class="word-ja">${esc(w.ja)}</span>
     <span class="badge badge-${w.tag || 'untested'}">${w.tag || '未テスト'}</span>
-    <button onclick="deleteWord('${w.id}')" style="background:none;border:none;color:var(--red);font-size:1.1rem;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;display:${fdEditMode ? 'block' : 'none'}" title="削除">🗑</button>
+    <button onclick="editWord('${w.id}')" style="background:none;border:none;color:var(--accent);font-size:1.05rem;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;display:${fdEditMode ? 'block' : 'none'}" title="編集">✏️</button>
+    <button onclick="deleteWord('${w.id}')" style="background:none;border:none;color:var(--red);font-size:1.05rem;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;display:${fdEditMode ? 'block' : 'none'}" title="削除">🗑</button>
   </div>`).join('');
       // 編集モード中はタイトルにバッジを表示
       const titleEl = document.getElementById('fd-title');
@@ -1405,13 +1406,44 @@
     function fdFilter(f) { fdFilt = f; renderFD(); }
     function deleteWord(wid) {
       const w = db.words.find(x => x.id === wid); if (!w) return;
-      if (!confirm(`「${w.en}」を削除しますか？`)) return;
       db.words = db.words.filter(x => x.id !== wid); saveDB();
-      // アニメーションで行を消してから再描画
       const row = document.getElementById('wr-' + wid);
       if (row) { row.style.transition = 'opacity .2s'; row.style.opacity = '0'; setTimeout(() => renderFD(), 200); }
       else renderFD();
       toast(`🗑「${w.en}」を削除しました`);
+    }
+    function editWord(wid) {
+      const w = db.words.find(x => x.id === wid); if (!w) return;
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div>
+        <div class="sheet-title">単語を編集</div>
+        <div class="f-group">
+          <label class="f-label">英単語</label>
+          <input class="f-input f-mono" id="edit-en" value="${esc(w.en)}" type="text" autocapitalize="none" autocorrect="off">
+        </div>
+        <div class="f-group">
+          <label class="f-label">日本語の意味</label>
+          <input class="f-input" id="edit-ja" value="${esc(w.ja)}" type="text">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-full" id="edit-cl">キャンセル</button>
+          <button class="btn btn-blue btn-full"  id="edit-ok">保存する</button>
+        </div>`;
+      const close = () => { bd.remove(); sh.remove(); };
+      bd.onclick = close;
+      sh.querySelector('#edit-cl').onclick = close;
+      sh.querySelector('#edit-ok').onclick = () => {
+        const newEn = sh.querySelector('#edit-en').value.trim();
+        const newJa = sh.querySelector('#edit-ja').value.trim();
+        if (!newEn || !newJa) return;
+        w.en = newEn; w.ja = newJa;
+        saveDB(); close(); renderFD();
+        toast(`✅「${newEn}」を更新しました`);
+      };
+      sh.querySelector('#edit-en').addEventListener('keydown', e => { if (e.key === 'Enter') sh.querySelector('#edit-ja').focus(); });
+      sh.querySelector('#edit-ja').addEventListener('keydown', e => { if (e.key === 'Enter') sh.querySelector('#edit-ok').click(); });
+      document.body.append(bd, sh);
+      setTimeout(() => sh.querySelector('#edit-en').focus(), 100);
     }
     function openFolderMenu() {
       const f = fById(curFID); if (!f) return;
@@ -1430,7 +1462,7 @@
         close();
         fdEditMode = !fdEditMode;
         renderFD();
-        toast(fdEditMode ? '🗑 削除ボタンが表示されました' : '✅ 編集モードを終了しました');
+        toast(fdEditMode ? '✏️ 編集モードを開始しました' : '✅ 編集モードを終了しました');
       };
       sh.querySelector('#fm-r').onclick = () => {
         close(); inputSheet('フォルダ名を変更', '新しい名前', f.name, name => {
