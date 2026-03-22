@@ -278,7 +278,7 @@
       border-radius: 8px;
       color: var(--text);
       font-family: inherit;
-      font-size: .9rem;
+      font-size: 16px;
       padding: 10px 12px;
       transition: border-color .15s
     }
@@ -292,14 +292,14 @@
 
     .f-mono {
       font-family: 'Courier New', monospace;
-      font-size: .88rem
+      font-size: 16px
     }
 
     .f-textarea {
       height: 150px;
       resize: vertical;
       font-family: 'Courier New', monospace;
-      font-size: .85rem
+      font-size: 16px
     }
 
     .f-group {
@@ -1022,10 +1022,7 @@
   <section id="screen-folders" class="screen">
     <div class="s-head">
       <span class="s-title">フォルダ</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="createDefaultFolder()">デフォルト</button>
-        <button class="btn btn-blue btn-sm" onclick="openNewFolderSheet()">＋ 新規</button>
-      </div>
+      <button class="btn btn-blue btn-sm" onclick="openNewFolderSheet()">＋ 新規</button>
     </div>
     <div id="folder-list-el"></div>
   </section>
@@ -1333,11 +1330,30 @@
       saveDB(); renderFolders(); renderAdd(); toast(`📁 デフォルトフォルダを生成しました（${SEED.length}語）`);
     }
     function openNewFolderSheet() {
-      inputSheet('新規フォルダ', 'フォルダ名（例：TOEIC 600点）', '', name => {
-        if (!name.trim()) return;
-        db.folders.push({ id: 'f' + Date.now(), name: name.trim(), createdAt: Date.now() });
-        saveDB(); renderFolders(); renderAdd(); toast('📁 フォルダ「' + name.trim() + '」を作成しました');
-      });
+      const [bd, sh] = sheet();
+      sh.innerHTML = `<div class="sheet-handle"></div>
+        <div class="sheet-title">フォルダを作成</div>
+        <div class="f-group"><input class="f-input" id="_si" placeholder="フォルダ名（例：TOEIC 600点）" value="" type="text"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-blue btn-full" id="_so">作成する</button>
+          <button class="btn btn-ghost btn-full" id="_sd">📚 デフォルトフォルダを生成</button>
+          <button class="btn btn-ghost btn-full" id="_sc">キャンセル</button>
+        </div>`;
+      const close = () => { bd.remove(); sh.remove(); };
+      const ok = () => {
+        const name = sh.querySelector('#_si').value.trim();
+        if (!name) return;
+        db.folders.push({ id: 'f' + Date.now(), name, createdAt: Date.now() });
+        saveDB(); renderFolders(); renderAdd(); close();
+        toast('📁 フォルダ「' + name + '」を作成しました');
+      };
+      bd.onclick = close;
+      sh.querySelector('#_sc').onclick = close;
+      sh.querySelector('#_so').onclick = ok;
+      sh.querySelector('#_sd').onclick = () => { close(); createDefaultFolder(); };
+      sh.querySelector('#_si').addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
+      document.body.append(bd, sh);
+      setTimeout(() => sh.querySelector('#_si').focus(), 100);
     }
 
     // ── FOLDER DETAIL ────────────────────────────────────
@@ -1387,7 +1403,7 @@
       const isDefault = false;
       sh.innerHTML = `<div class="sheet-handle"></div><div class="sheet-title">📁 ${esc(f.name)}</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-ghost btn-full" id="fm-e">${fdEditMode ? '✅ 編集モードを終了' : '✏️ 単語を編集（削除）'}</button>
+      <button class="btn btn-ghost btn-full" id="fm-e">${fdEditMode ? '✅ 編集モードを終了' : '✏️ 単語を編集'}</button>
       <button class="btn btn-ghost btn-full" id="fm-r">📝 フォルダ名を変更</button>
       <button class="btn btn-danger btn-full" id="fm-d">🗑 フォルダを削除</button>
       <button class="btn btn-ghost btn-full" id="fm-c">キャンセル</button></div>`;
